@@ -1,0 +1,11 @@
+# NutriMED® 官網 ／ GUANG-YU INTERNATIONAL CO., LTD.
+# robots.txt — 搜尋引擎爬蟲規則
+
+User-agent: *
+Allow: /
+
+# 排除不需要索引的目錄(目前無)
+# Disallow: /private/
+
+# Sitemap 位置
+Sitemap: https://nutrimed.com.tw/sitemap.xml
