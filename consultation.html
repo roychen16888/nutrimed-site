@@ -167,8 +167,8 @@
         <p>
           請依下方欄位填寫您的諮詢需求。
           完成後點擊頁面下方的「整理諮詢內容」按鈕,
-          系統會把您填寫的內容整理成可複製的格式,
-          您可選擇複製到 LINE 傳送,或透過 E-mail 寄出。
+          系統會把您填寫的內容整理成清楚的格式,
+          您可選擇直接送出給技術窗口,或複製到 LINE 傳送。
         </p>
       </div>
 
@@ -412,20 +412,24 @@
             <span id="copyBtnText">複製內容(供 LINE 使用)</span>
           </button>
 
-          <button type="button" class="btn btn-primary" onclick="sendByEmail()">
+          <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitConsultation()">
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true">
               <rect x="2" y="4" width="12" height="9" rx="1" stroke="currentColor" stroke-width="1.4"/>
               <path d="M2 5l6 4 6-4" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
             </svg>
-            開啟 E-mail 寄出
+            <span id="submitBtnText">直接送出給技術窗口</span>
           </button>
         </div>
+
+        <!-- 後端送出結果訊息 -->
+        <div class="consult-submit-msg" id="submitMsg" role="status" aria-live="polite"
+             style="display:none; margin-top:1rem; padding:1rem 1.25rem; border-radius:8px; font-size:0.95rem; line-height:1.6;"></div>
 
         <div class="consult-output-tips">
           <strong>提交方式說明:</strong>
           <ul>
+            <li><strong>直接送出(推薦)</strong>:點「直接送出給技術窗口」,系統會立即把您的諮詢內容寄給 NutriMED 技術窗口,畫面會顯示送出結果,不需要您自己的郵件程式。</li>
             <li><strong>LINE 方式</strong>:點「複製內容」後,加 LINE <code>roychen16888</code>(NutriMED 技術窗口),貼上內容傳送。</li>
-            <li><strong>E-mail 方式</strong>:點「開啟 E-mail 寄出」會啟動您的預設郵件程式,內容已預填,確認後送出即可。</li>
           </ul>
 
           <!-- LINE QR Code 內嵌區 -->
@@ -807,27 +811,83 @@ function copyConsultText() {
   }
 }
 
-// 開啟 E-mail
-function sendByEmail() {
-  if (!lastGeneratedText) {
-    alert('請先按「整理諮詢內容」按鈕');
+// 直接送出到後端 /api/consultation
+async function submitConsultation() {
+  // 重新蒐集當前表單值（以使用者最新填寫為準）
+  const get = (id) => document.getElementById(id).value.trim();
+  const consultType = document.querySelector('input[name="consultType"]:checked').value;
+
+  const payload = {
+    docName: get('docName'),
+    clinicName: get('clinicName'),
+    docEmail: get('docEmail'),
+    docLine: get('docLine'),
+    consultType: consultType,
+    mainQuestion: get('mainQuestion'),
+    case1: get('case1'),
+    case2: get('case2'),
+    case3: get('case3'),
+    case4: get('case4'),
+    case5: get('case5'),
+    additional: get('additional'),
+    consent: document.getElementById('consentCheck').checked ? 'true' : '',
+  };
+
+  // 前端先驗證一次（規則與後端一致），避免無謂的請求
+  const errors = [];
+  if (!payload.docName) errors.push('請填寫您的稱呼');
+  if (!payload.clinicName) errors.push('請填寫診所名稱');
+  if (!payload.docEmail && !payload.docLine) errors.push('請至少填寫一項聯絡方式(E-mail 或 LINE ID)');
+  if (!payload.mainQuestion) errors.push('請填寫主要諮詢問題');
+  if (!payload.consent) errors.push('請勾選同意聲明');
+  if (errors.length > 0) {
+    alert('請先補齊下列必填項目:\n\n' + errors.map(e => '・' + e).join('\n'));
     return;
   }
 
-  const subject = 'NutriMED® 個案技術諮詢 - ' +
-    (document.getElementById('clinicName').value || '') +
-    ' ' + (document.getElementById('docName').value || '');
+  const btn = document.getElementById('submitBtn');
+  const btnText = document.getElementById('submitBtnText');
+  const msgBox = document.getElementById('submitMsg');
+  const origText = btnText.textContent;
 
-  const mailtoUrl = 'mailto:guangyu16888@gmail.com' +
-    '?subject=' + encodeURIComponent(subject) +
-    '&body=' + encodeURIComponent(lastGeneratedText);
+  // 進入「傳送中」狀態，避免重複點擊
+  btn.disabled = true;
+  btnText.textContent = '傳送中…';
+  msgBox.style.display = 'none';
 
-  // mailto: 有 URL 長度限制,提示使用者
-  if (mailtoUrl.length > 2000) {
-    alert('您的內容較長,可能會被 E-mail 程式截斷。\n建議改用「複製內容」按鈕,然後手動貼到 E-mail 內容區。');
+  try {
+    const res = await fetch('/api/consultation', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json();
+
+    if (res.ok && result.ok) {
+      msgBox.style.display = 'block';
+      msgBox.style.background = '#E8F3EC';
+      msgBox.style.color = '#1B3A2B';
+      msgBox.style.border = '1px solid #8FB89B';
+      msgBox.innerHTML =
+        '<strong>✓ 已成功送出！</strong><br>' +
+        '您的諮詢已寄達 NutriMED 技術窗口。一般性問題約 1–2 個工作日、複雜個案約 3–5 個工作日內，我們會以您填寫的 E-mail 或 LINE 書面回覆。';
+      btnText.textContent = '✓ 已送出';
+      // 成功後維持禁用，避免重複送出；如需再次送出可重新整理頁面
+    } else {
+      throw new Error((result && result.error) ? result.error : ('伺服器回應狀態 ' + res.status));
+    }
+  } catch (err) {
+    msgBox.style.display = 'block';
+    msgBox.style.background = '#FBEAEA';
+    msgBox.style.color = '#7A1F1F';
+    msgBox.style.border = '1px solid #D99A9A';
+    msgBox.innerHTML =
+      '<strong>✗ 送出失敗</strong><br>' +
+      '原因:' + (err && err.message ? err.message : '網路連線問題') + '<br>' +
+      '您可以稍後再試，或改用「複製內容」後傳送 LINE <code>roychen16888</code>。';
+    btn.disabled = false;
+    btnText.textContent = origText;
   }
-
-  window.location.href = mailtoUrl;
 }
 </script>
 

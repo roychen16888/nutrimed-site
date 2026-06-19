@@ -23,6 +23,21 @@ const INTEREST_LABELS = {
   other: "其他",
 };
 
+// 個案技術諮詢：諮詢類型對照
+const CONSULT_TYPE_LABELS = {
+  general: "泛論性技術提問",
+  case: "具體個案討論",
+};
+
+// 個案技術諮詢：個案五大類資訊的欄位標籤
+const CASE_LABELS = [
+  ["case1", "① 基本生理數據"],
+  ["case2", "② 療程歷程"],
+  ["case3", "③ 生活型態"],
+  ["case4", "④ 中醫辨證"],
+  ["case5", "⑤ 卡關線索"],
+];
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -37,6 +52,20 @@ export default {
       } catch (err) {
         const detail = err && err.message ? err.message : String(err);
         console.error("contact handler error:", detail, err && err.stack);
+        return json({ ok: false, error: "系統錯誤：" + detail }, 500);
+      }
+    }
+
+    if (url.pathname === "/api/consultation") {
+      if (request.method !== "POST") {
+        return json({ ok: false, error: "只接受 POST" }, 405);
+      }
+      // 防護網：任何未預期的錯誤都回傳可讀訊息，不會回非 JSON
+      try {
+        return await handleConsultation(request, env);
+      } catch (err) {
+        const detail = err && err.message ? err.message : String(err);
+        console.error("consultation handler error:", detail, err && err.stack);
         return json({ ok: false, error: "系統錯誤：" + detail }, 500);
       }
     }
@@ -110,6 +139,112 @@ async function handleContact(request, env) {
     msg.setHeader("Reply-To", { addr: data.email });
   } catch (e) {
     console.warn("Reply-To skipped:", e && e.message ? e.message : e);
+  }
+  msg.addMessage({ contentType: "text/plain", data: body });
+
+  const emailMessage = new EmailMessage(FROM_ADDRESS, TO_ADDRESS, msg.asRaw());
+
+  // 5) 寄出
+  try {
+    await env.SEB.send(emailMessage);
+  } catch (err) {
+    const detail = err && err.message ? err.message : String(err);
+    console.error("send_email failed:", detail);
+    return json({ ok: false, error: "寄信失敗：" + detail }, 502);
+  }
+
+  return json({ ok: true });
+}
+
+// ===== 個案技術諮詢處理 =====
+async function handleConsultation(request, env) {
+  // 1) 解析表單（同時支援 FormData 與 JSON）
+  let data;
+  try {
+    const ct = request.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      data = await request.json();
+    } else {
+      data = formToObject(await request.formData());
+    }
+  } catch {
+    return json({ ok: false, error: "無法解析表單資料" }, 400);
+  }
+
+  // 2) 後端驗證（不信任前端；規則對齊前端問卷）
+  const docName = String(data.docName || "").trim();
+  const clinicName = String(data.clinicName || "").trim();
+  const mainQuestion = String(data.mainQuestion || "").trim();
+  const docEmail = String(data.docEmail || "").trim();
+  const docLine = String(data.docLine || "").trim();
+
+  if (!docName) return json({ ok: false, error: "請填寫您的稱呼" }, 400);
+  if (!clinicName) return json({ ok: false, error: "請填寫診所名稱" }, 400);
+  if (!mainQuestion) return json({ ok: false, error: "請填寫主要諮詢問題" }, 400);
+  if (!docEmail && !docLine) {
+    return json({ ok: false, error: "請至少填寫一項聯絡方式（E-mail 或 LINE ID）" }, 400);
+  }
+  if (!isChecked(data.consent)) {
+    return json({ ok: false, error: "請勾選同意聲明" }, 400);
+  }
+
+  // 3) 組信件內容
+  const consultType = String(data.consultType || "general");
+  const consultTypeLabel = CONSULT_TYPE_LABELS[consultType] || consultType;
+
+  const lines = [
+    "您收到一筆來自 nutrimed.com.tw 的個案技術諮詢：",
+    "",
+    `諮詢類型：${consultTypeLabel}`,
+    "",
+    "◆ 聯絡資訊",
+    `稱呼：${docName}`,
+    `診所：${clinicName}`,
+    `E-mail：${docEmail ? docEmail : "（未填）"}`,
+    `LINE ID：${docLine ? docLine : "（未填）"}`,
+    "",
+    "◆ 主要諮詢問題",
+    mainQuestion,
+  ];
+
+  // 個案五大類資訊：僅「具體個案討論」且有填內容時才附上
+  if (consultType === "case") {
+    const filled = [];
+    for (const [key, label] of CASE_LABELS) {
+      const val = String(data[key] || "").trim();
+      if (val) filled.push(`${label}：\n${val}`);
+    }
+    if (filled.length > 0) {
+      lines.push("", "◆ 個案五大類資訊（已匿名化）", filled.join("\n\n"));
+    }
+  }
+
+  const additional = String(data.additional || "").trim();
+  if (additional) {
+    lines.push("", "◆ 補充說明", additional);
+  }
+
+  lines.push(
+    "",
+    "————————————————————",
+    `送出時間：${taipeiNow()}（台北時間）`
+  );
+
+  const body = lines.join("\n");
+  const subject = `【個案技術諮詢】${clinicName}　${docName}`;
+
+  // 4) 用 mimetext 組 MIME（自動處理中文編碼）
+  const msg = createMimeMessage();
+  msg.setSender({ name: "NutriMED 個案諮詢", addr: FROM_ADDRESS });
+  msg.setRecipient(TO_ADDRESS);
+  msg.setSubject(subject);
+  // Reply-To 讓你可直接「回覆」給諮詢醫師（若有填 E-mail）
+  if (docEmail) {
+    try {
+      msg.setHeader("Reply-To", { addr: docEmail });
+    } catch (e) {
+      console.warn("Reply-To skipped:", e && e.message ? e.message : e);
+    }
   }
   msg.addMessage({ contentType: "text/plain", data: body });
 
