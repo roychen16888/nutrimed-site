@@ -1,7 +1,8 @@
 // NutriMED 聯絡表單寄信後端
 // 路由：POST /api/contact → 寄信到已驗證的 Gmail；其餘路徑 → 交給靜態網站
 import { EmailMessage } from "cloudflare:email";
-import { createMimeMessage } from "mimetext";
+// 注意：Cloudflare Workers 必須用 mimetext 的「瀏覽器版」，預設 node 版會在執行階段出錯
+import { createMimeMessage } from "mimetext/browser";
 
 const FROM_ADDRESS = "info@nutrimed.com.tw"; // 寄件人（必須是 nutrimed.com.tw 網域）
 const TO_ADDRESS = "roychen16888@gmail.com"; // 收件人（Email Routing 已驗證）
@@ -30,7 +31,14 @@ export default {
       if (request.method !== "POST") {
         return json({ ok: false, error: "只接受 POST" }, 405);
       }
-      return handleContact(request, env);
+      // 防護網：任何未預期的錯誤都回傳可讀訊息，不會回非 JSON
+      try {
+        return await handleContact(request, env);
+      } catch (err) {
+        const detail = err && err.message ? err.message : String(err);
+        console.error("contact handler error:", detail, err && err.stack);
+        return json({ ok: false, error: "系統錯誤：" + detail }, 500);
+      }
     }
 
     // 其餘路徑一律交給靜態網站處理
@@ -70,7 +78,6 @@ async function handleContact(request, env) {
   // 3) 組信件內容
   const positionLabel = POSITION_LABELS[data.position] || data.position;
   const interestText = interests.map((i) => INTEREST_LABELS[i] || i).join("、");
-  const submittedAt = new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
 
   const body = [
     "您收到一筆來自 nutrimed.com.tw 的醫療通路合作申請：",
@@ -87,7 +94,7 @@ async function handleContact(request, env) {
     data.message ? data.message : "（未填）",
     "",
     "————————————————————",
-    `送出時間：${submittedAt}（台北時間）`,
+    `送出時間：${taipeiNow()}（台北時間）`,
   ].join("\n");
 
   const subject = `【合作申請】${data.clinicName}　${data.contactName}`;
@@ -106,8 +113,9 @@ async function handleContact(request, env) {
   try {
     await env.SEB.send(emailMessage);
   } catch (err) {
-    console.error("send_email failed:", err && err.message ? err.message : err);
-    return json({ ok: false, error: "寄信失敗，請改用 LINE 或 Email 與我們聯繫" }, 502);
+    const detail = err && err.message ? err.message : String(err);
+    console.error("send_email failed:", detail);
+    return json({ ok: false, error: "寄信失敗：" + detail }, 502);
   }
 
   return json({ ok: true });
@@ -137,4 +145,11 @@ function toArray(v) {
 
 function isChecked(v) {
   return v === true || ["on", "true", "1", "yes"].includes(String(v).toLowerCase());
+}
+
+// 不依賴系統時區資料，直接以 UTC+8 計算台北時間
+function taipeiNow() {
+  const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
 }
