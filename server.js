@@ -104,7 +104,13 @@ async function handleContact(request, env) {
   msg.setSender({ name: "NutriMED 網站表單", addr: FROM_ADDRESS });
   msg.setRecipient(TO_ADDRESS);
   msg.setSubject(subject);
-  msg.setHeader("Reply-To", data.email); // 讓你可直接「回覆」給申請人
+  // Reply-To 讓你可直接「回覆」給申請人；mimetext 視其為位址型標頭，須傳位址物件。
+  // 包一層保險：萬一失敗就略過，不影響信件寄出。
+  try {
+    msg.setHeader("Reply-To", { addr: data.email });
+  } catch (e) {
+    console.warn("Reply-To skipped:", e && e.message ? e.message : e);
+  }
   msg.addMessage({ contentType: "text/plain", data: body });
 
   const emailMessage = new EmailMessage(FROM_ADDRESS, TO_ADDRESS, msg.asRaw());
