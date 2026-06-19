@@ -166,7 +166,7 @@
         <div class="contact-direct-list">
           <div class="contact-direct-item">
             <div class="contact-direct-label">E-mail</div>
-            <a href="mailto:guangyu16888@gmail.com" class="contact-direct-value">guangyu16888@gmail.com</a>
+            <a href="mailto:info@nutrimed.com.tw" class="contact-direct-value">info@nutrimed.com.tw</a>
           </div>
           <div class="contact-direct-item">
             <div class="contact-direct-label">客服電話</div>
@@ -327,6 +327,9 @@
 
       </form>
 
+      <!-- 送出失敗訊息 (預設隱藏) -->
+      <div id="formError" role="alert" style="display:none; margin-top:1.25rem; padding:1rem 1.25rem; border:1px solid #C0392B; border-radius:8px; color:#A93226; background:#FDEDEC; line-height:1.7;"></div>
+
       <!-- 送出成功訊息 (預設隱藏) -->
       <div class="form-success" id="formSuccess" style="display:none;">
         <svg viewBox="0 0 64 64" width="48" height="48" fill="none" aria-hidden="true">
@@ -465,7 +468,7 @@
             </li>
             <li>
               <span class="footer-info-label">E-mail</span>
-              <span class="footer-info-value"><a href="mailto:guangyu16888@gmail.com">guangyu16888@gmail.com</a></span>
+              <span class="footer-info-value"><a href="mailto:info@nutrimed.com.tw">info@nutrimed.com.tw</a></span>
             </li>
             <li>
               <span class="footer-info-label">LINE 諮詢窗口</span>
@@ -569,12 +572,55 @@
 </footer>
 
 <script>
-// 簡易表單提交處理(尚未串接後端,只做前端 UX 展示)
+// 表單提交：POST 到 /api/contact，只有伺服器確實回成功才顯示成功訊息
 function handleFormSubmit(event) {
   event.preventDefault();
-  document.getElementById('partnershipForm').style.display = 'none';
-  document.getElementById('formSuccess').style.display = 'flex';
-  document.getElementById('formSuccess').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  var form = document.getElementById('partnershipForm');
+  var successEl = document.getElementById('formSuccess');
+  var errorEl = document.getElementById('formError');
+  var submitBtn = form.querySelector('button[type="submit"]');
+  var originalBtnHTML = submitBtn ? submitBtn.innerHTML : '';
+
+  // 前端先檢查：至少勾一項「想了解的事項」
+  if (form.querySelectorAll('input[name="interests"]:checked').length === 0) {
+    showError('請至少勾選一項「想了解的事項」。');
+    return;
+  }
+
+  if (errorEl) errorEl.style.display = 'none';
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '送出中…'; }
+
+  fetch('/api/contact', { method: 'POST', body: new FormData(form) })
+    .then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        return { ok: res.ok, data: data };
+      });
+    })
+    .then(function (result) {
+      if (result.ok && result.data && result.data.ok === true) {
+        form.style.display = 'none';
+        successEl.style.display = 'flex';
+        successEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        showError((result.data && result.data.error) ? result.data.error : '送出失敗,請稍後再試。');
+        restoreBtn();
+      }
+    })
+    .catch(function () {
+      showError('連線發生問題,請檢查網路後再試,或改用上方 LINE／Email 與我們聯繫。');
+      restoreBtn();
+    });
+
+  function showError(text) {
+    if (!errorEl) { alert(text); return; }
+    errorEl.textContent = text;
+    errorEl.style.display = 'block';
+    errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function restoreBtn() {
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnHTML; }
+  }
 }
 </script>
 
