@@ -595,7 +595,7 @@
             <li><span class="footer-info-label">公司地址</span><span class="footer-info-value">桃園市蘆竹區仁愛路三段 260 巷 5 號 11 樓之 1</span></li>
             <li><span class="footer-info-label">客服電話</span><span class="footer-info-value"><a href="tel:+886332154870">(03) 321-5487</a></span></li>
             <li><span class="footer-info-label">傳　　真</span><span class="footer-info-value">(03) 322-3812</span></li>
-            <li><span class="footer-info-label">E-mail</span><span class="footer-info-value"><a href="mailto:guangyu16888@gmail.com">guangyu16888@gmail.com</a></span></li>
+            <li><span class="footer-info-label">E-mail</span><span class="footer-info-value"><a href="mailto:roychen16888@gmail.com">roychen16888@gmail.com</a></span></li>
             <li><span class="footer-info-label">LINE 諮詢窗口</span><span class="footer-info-value">roychen16888</span></li>
             <li><span class="footer-info-label">統一編號</span><span class="footer-info-value">27315735</span></li>
           </ul>
@@ -870,7 +870,8 @@ async function submitConsultation() {
       msgBox.style.border = '1px solid #8FB89B';
       msgBox.innerHTML =
         '<strong>✓ 已成功送出！</strong><br>' +
-        '您的諮詢已寄達 NutriMED 技術窗口。一般性問題約 1–2 個工作日、複雜個案約 3–5 個工作日內，我們會以您填寫的 E-mail 或 LINE 書面回覆。';
+        '您的諮詢已寄達 NutriMED 技術窗口。一般性問題約 1–2 個工作日、複雜個案約 3–5 個工作日內，我們會以您填寫的 E-mail 或 LINE 書面回覆。' +
+        '<br><br><button type="button" class="btn btn-secondary" onclick="resetConsultForm()">填寫下一筆諮詢</button>';
       btnText.textContent = '✓ 已送出';
       // 成功後維持禁用，避免重複送出；如需再次送出可重新整理頁面
     } else {
@@ -888,6 +889,30 @@ async function submitConsultation() {
     btn.disabled = false;
     btnText.textContent = origText;
   }
+}
+
+// 重置表單，準備填寫下一筆（手機桌機通用，免重整頁面）
+function resetConsultForm() {
+  // 清空所有欄位，回到 HTML 預設值（諮詢類型回到「泛論性」、同意取消勾選）
+  document.getElementById('consultForm').reset();
+  toggleCaseBlock(); // 依預設類型重新隱藏個案五大類區塊
+
+  // 清掉暫存與輸出區
+  lastGeneratedText = '';
+  document.getElementById('consultOutput').style.display = 'none';
+  document.getElementById('submitMsg').style.display = 'none';
+
+  // 還原送出按鈕
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  document.getElementById('submitBtnText').textContent = '直接送出給技術窗口';
+
+  // 還原複製按鈕文字
+  const copyText = document.getElementById('copyBtnText');
+  if (copyText) copyText.textContent = '複製內容(供 LINE 使用)';
+
+  // 捲回表單頂部，方便接著填
+  document.getElementById('form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 </script>
 
