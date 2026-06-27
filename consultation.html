@@ -276,6 +276,13 @@
             不含可辨識患者身分的資訊。</strong>
           </p>
 
+          <p class="consult-fieldset-note">
+            <strong>體脂機可藍牙連結 App 者</strong>:歡迎直接截圖數據畫面,
+            加 LINE <code>roychen16888</code> 傳送,免逐項手動輸入。
+            <strong>傳送前請務必遮蔽或裁切患者姓名、ID、測定日期等可辨識資訊</strong>——
+            技術評估僅需數值,不需任何身分資料。
+          </p>
+
           <!-- ① 基本生理數據 -->
           <details class="consult-detail" open>
             <summary>
@@ -283,10 +290,72 @@
               基本生理數據
             </summary>
             <div class="consult-detail-body">
-              <div class="form-field">
-                <label for="case1">性別、年齡區間、BMI、體脂率、骨骼肌率等</label>
-                <textarea id="case1" name="case1" rows="3" placeholder="例:女性、45–50 歲、BMI 27.5、體脂率 33%、骨骼肌率 26%"></textarea>
+
+              <p class="consult-fieldset-note" style="margin-top:0;">
+                以下各欄<strong>皆為選填</strong>,依手邊掌握的數據填寫即可,空白不影響送出。
+              </p>
+
+              <div class="form-row form-row-2">
+                <div class="form-field">
+                  <label for="b1_sex">性別</label>
+                  <select id="b1_sex" name="b1_sex">
+                    <option value="">請選擇</option>
+                    <option value="女">女</option>
+                    <option value="男">男</option>
+                    <option value="不提供">不提供</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label for="b1_age">年齡區間</label>
+                  <select id="b1_age" name="b1_age">
+                    <option value="">請選擇</option>
+                    <option value="30 以下">30 以下</option>
+                    <option value="30–39">30–39</option>
+                    <option value="40–49">40–49</option>
+                    <option value="50–59">50–59</option>
+                    <option value="60 以上">60 以上</option>
+                  </select>
+                </div>
               </div>
+
+              <div class="form-row form-row-2">
+                <div class="form-field">
+                  <label for="b1_height">身高（cm）</label>
+                  <input type="text" inputmode="decimal" id="b1_height" name="b1_height" placeholder="例:162" oninput="calcBMI()">
+                </div>
+                <div class="form-field">
+                  <label for="b1_weight">體重（kg）</label>
+                  <input type="text" inputmode="decimal" id="b1_weight" name="b1_weight" placeholder="例:68.5" oninput="calcBMI()">
+                </div>
+              </div>
+
+              <div class="form-row form-row-2">
+                <div class="form-field">
+                  <label>BMI（依身高體重自動計算）</label>
+                  <div id="b1_bmi" style="width:100%;padding:11px 14px;font-family:var(--f-sans);font-size:14px;color:var(--ink-2);background:#F1EFE9;border:1px solid var(--line);border-radius:2px;box-sizing:border-box;">—</div>
+                </div>
+                <div class="form-field">
+                  <label for="b1_waist">腰圍（cm）</label>
+                  <input type="text" inputmode="decimal" id="b1_waist" name="b1_waist" placeholder="皮尺即可量,建議填寫">
+                </div>
+              </div>
+
+              <div class="form-row form-row-2">
+                <div class="form-field">
+                  <label for="b1_bodyfat">體脂率（%）</label>
+                  <input type="text" inputmode="decimal" id="b1_bodyfat" name="b1_bodyfat" placeholder="例:33">
+                </div>
+                <div class="form-field">
+                  <label for="b1_muscle">骨骼肌率（%）</label>
+                  <input type="text" inputmode="decimal" id="b1_muscle" name="b1_muscle" placeholder="部分體脂機未提供,可留空">
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label for="case1">其他補充（選填）</label>
+                <textarea id="case1" name="case1" rows="2" placeholder="上列欄位未涵蓋的數據或備註,可填於此(例:內臟脂肪等級、基礎代謝率、相位角…)"></textarea>
+              </div>
+
             </div>
           </details>
 
@@ -696,6 +765,38 @@ toggleCaseBlock(); // 初始
 // 整理諮詢內容為格式化文字
 let lastGeneratedText = '';
 
+// 依身高體重自動計算 BMI,顯示於唯讀框(不手動輸入)
+function calcBMI() {
+  const h = parseFloat(document.getElementById('b1_height').value);
+  const w = parseFloat(document.getElementById('b1_weight').value);
+  const el = document.getElementById('b1_bmi');
+  if (h > 0 && w > 0) {
+    const bmi = w / Math.pow(h / 100, 2);
+    el.textContent = bmi.toFixed(1);
+  } else {
+    el.textContent = '—';
+  }
+}
+
+// 將 ① 基本生理數據離散欄組回單一字串(維持 case1 後端契約不變)
+function buildCase1() {
+  const v = (id) => document.getElementById(id).value.trim();
+  const parts = [];
+  if (v('b1_sex')) parts.push('性別:' + v('b1_sex'));
+  if (v('b1_age')) parts.push('年齡區間:' + v('b1_age'));
+  if (v('b1_height')) parts.push('身高:' + v('b1_height') + 'cm');
+  if (v('b1_weight')) parts.push('體重:' + v('b1_weight') + 'kg');
+  const bmi = document.getElementById('b1_bmi').textContent.trim();
+  if (bmi && bmi !== '—') parts.push('BMI:' + bmi);
+  if (v('b1_waist')) parts.push('腰圍:' + v('b1_waist') + 'cm');
+  if (v('b1_bodyfat')) parts.push('體脂率:' + v('b1_bodyfat') + '%');
+  if (v('b1_muscle')) parts.push('骨骼肌率:' + v('b1_muscle') + '%');
+  let result = parts.join('、');
+  const extra = v('case1');
+  if (extra) result += (result ? '\n補充:' : '') + extra;
+  return result;
+}
+
 function generateConsultText() {
   // 收集表單資料
   const docName = document.getElementById('docName').value.trim();
@@ -753,7 +854,7 @@ function generateConsultText() {
     let hasCaseInfo = false;
     let caseText = '◆ 個案五大類資訊(已匿名化)\n';
     for (const [id, label] of labels) {
-      const val = document.getElementById(id).value.trim();
+      const val = (id === 'case1') ? buildCase1() : document.getElementById(id).value.trim();
       if (val) {
         caseText += label + ':\n' + val + '\n\n';
         hasCaseInfo = true;
@@ -824,7 +925,7 @@ async function submitConsultation() {
     docLine: get('docLine'),
     consultType: consultType,
     mainQuestion: get('mainQuestion'),
-    case1: get('case1'),
+    case1: buildCase1(),
     case2: get('case2'),
     case3: get('case3'),
     case4: get('case4'),
@@ -896,6 +997,7 @@ function resetConsultForm() {
   // 清空所有欄位，回到 HTML 預設值（諮詢類型回到「泛論性」、同意取消勾選）
   document.getElementById('consultForm').reset();
   toggleCaseBlock(); // 依預設類型重新隱藏個案五大類區塊
+  calcBMI(); // 身高體重已清空,BMI 顯示框歸位為 —
 
   // 清掉暫存與輸出區
   lastGeneratedText = '';
