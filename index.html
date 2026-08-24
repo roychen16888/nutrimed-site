@@ -24,30 +24,56 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "NutriMED",
-  "legalName": "光裕國際有限公司",
-  "alternateName": ["NutriMED®", "GUANG-YU INTERNATIONAL CO., LTD."],
-  "url": "https://nutrimed.com.tw",
-  "logo": "https://nutrimed.com.tw/assets/logo.svg",
-  "description": "台灣中醫診所專屬之顧問夥伴品牌,提供配合科學中藥處方的療程式營養補充劑",
-  "slogan": "讓營養,成為處方",
-  "taxID": "27315735",
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "TW",
-    "addressRegion": "桃園市",
-    "addressLocality": "蘆竹區",
-    "streetAddress": "仁愛路三段260巷5號11樓之1"
-  },
-  "contactPoint": [{
-    "@type": "ContactPoint",
-    "telephone": "+886-3-321-5487",
-    "contactType": "customer service",
-    "email": "info@nutrimed.com.tw",
-    "areaServed": "TW",
-    "availableLanguage": ["zh-Hant"]
-  }]
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://nutrimed.com.tw/#organization",
+      "name": "NutriMED",
+      "legalName": "光裕國際有限公司",
+      "alternateName": ["NutriMED®", "GUANG-YU INTERNATIONAL CO., LTD.", "光裕國際"],
+      "url": "https://nutrimed.com.tw/",
+      "logo": "https://nutrimed.com.tw/assets/logo.svg",
+      "description": "台灣中醫診所專屬之顧問夥伴品牌,提供配合科學中藥處方的療程式營養補充劑。產品依台灣法規屬一般食品類別,非藥品。",
+      "slogan": "讓營養,成為處方",
+      "taxID": "27315735",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "TW",
+        "addressRegion": "桃園市",
+        "addressLocality": "蘆竹區",
+        "streetAddress": "仁愛路三段260巷5號11樓之1"
+      },
+      "contactPoint": [{
+        "@type": "ContactPoint",
+        "name": "醫療通路合作窗口",
+        "telephone": "+886-3-321-5487",
+        "faxNumber": "+886-3-322-3812",
+        "contactType": "sales",
+        "email": "info@nutrimed.com.tw",
+        "areaServed": "TW",
+        "availableLanguage": ["zh-Hant"]
+      }],
+      "brand": {
+        "@type": "Brand",
+        "name": "NutriMED®",
+        "slogan": "讓營養,成為處方"
+      },
+      "knowsAbout": [
+        "營養補充食品",
+        "中醫診所通路",
+        "科學中藥處方搭配",
+        "體重管理衛教"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://nutrimed.com.tw/#website",
+      "url": "https://nutrimed.com.tw/",
+      "name": "NutriMED® 官方網站",
+      "inLanguage": "zh-Hant-TW",
+      "publisher": { "@id": "https://nutrimed.com.tw/#organization" }
+    }
+  ]
 }
 </script>
 
@@ -87,7 +113,7 @@
       <li><a href="about.html">品牌理念</a></li>
       <li><a href="how-we-work.html">我們如何工作</a></li>
       <li><a href="products.html">產品介紹</a></li>
-      <li><a href="education/index.html">停滯期衛教</a></li>
+      <li><a href="education/">停滯期衛教</a></li>
       <li><a href="contact.html" class="nav-cta">
         醫療通路合作
         <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
@@ -361,7 +387,7 @@
         </div>
       </a>
 
-      <a href="education/index.html" class="path-card">
+      <a href="education/" class="path-card">
         <div class="path-card-tag">— PATH B · CLINICAL INSIGHTS —</div>
         <h3>為什麼減重會卡關</h3>
         <p>
@@ -492,7 +518,7 @@
       <div class="footer-col">
         <h4>知識與資源</h4>
         <ul>
-          <li><a href="education/index.html">停滯期衛教專欄</a></li>
+          <li><a href="education/">停滯期衛教專欄</a></li>
           <li><a href="education/why-weight-loss-plateau.html">減重停滯期概論</a></li>
         </ul>
       </div>
@@ -521,7 +547,7 @@
             </li>
             <li>
               <span class="footer-info-label">客服電話</span>
-              <span class="footer-info-value"><a href="tel:+886332154870">(03) 321-5487</a></span>
+              <span class="footer-info-value"><a href="tel:+88633215487">(03) 321-5487</a></span>
             </li>
             <li>
               <span class="footer-info-label">傳　　真</span>
