@@ -1,69 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NutriMED® 官網 sitemap
+  最後更新：2026-08-24
+  註：本站的規範網址一律不帶 .html 副檔名（Worker 會將 .html 版本 301 轉址）。
+      新增頁面時請沿用同一形式，勿寫回 .html，否則 Google 會抓到轉址。
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- 主要頁面 -->
   <url>
     <loc>https://nutrimed.com.tw/</loc>
-    <lastmod>2026-07-25</lastmod>
+    <lastmod>2026-08-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://nutrimed.com.tw/about.html</loc>
-    <lastmod>2026-07-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://nutrimed.com.tw/how-we-work.html</loc>
-    <lastmod>2026-07-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://nutrimed.com.tw/products.html</loc>
-    <lastmod>2026-07-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://nutrimed.com.tw/contact.html</loc>
-    <lastmod>2026-07-25</lastmod>
+    <loc>https://nutrimed.com.tw/about</loc>
+    <lastmod>2026-08-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- 衛教專欄 -->
+  <url>
+    <loc>https://nutrimed.com.tw/how-we-work</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://nutrimed.com.tw/products</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://nutrimed.com.tw/contact</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <url>
     <loc>https://nutrimed.com.tw/education/</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://nutrimed.com.tw/education/why-weight-loss-plateau.html</loc>
-    <lastmod>2026-07-25</lastmod>
+    <lastmod>2026-08-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://nutrimed.com.tw/education/hpa-axis-stress.html</loc>
-    <lastmod>2026-07-24</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://nutrimed.com.tw/education/why-weight-loss-plateau</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://nutrimed.com.tw/education/metabolic-adaptation.html</loc>
-    <lastmod>2026-07-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <loc>https://nutrimed.com.tw/education/hpa-axis-stress</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://nutrimed.com.tw/education/metabolic-adaptation</loc>
+    <lastmod>2026-08-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>
