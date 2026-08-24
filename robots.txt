@@ -1,11 +1,71 @@
 # NutriMED® 官網 ／ GUANG-YU INTERNATIONAL CO., LTD.
-# robots.txt — 搜尋引擎爬蟲規則
+# robots.txt — 搜尋引擎與 AI 爬蟲規則
+# 最後更新：2026-08-24
+#
+# ⚠️ 前置條件：本檔要生效，必須先關閉 Cloudflare 的 Managed robots.txt。
+#    位置：Cloudflare 儀表板 → 選 nutrimed.com.tw → Security → Settings
+#          → 篩選 Bot traffic → 「Set your preference to block training
+#            in robots.txt」→ 關閉
+#    若不關閉，Cloudflare 會把它的封鎖清單插在本檔「前面」，本檔等同無效。
+
+# ── 內容使用意向宣告（Cloudflare Content Signals Policy 格式）──────────
+# search   = 允許建立搜尋索引
+# ai-input = 允許作為 AI 即時回答的引用來源（RAG／grounding）
+# ai-train = 允許作為 AI 模型訓練素材
+# use=full = 不限制 AI 系統的消費方式
+#
+# 立場說明：NutriMED 官網的內容是公司定位與公開衛教整理，本身即為對外
+# 溝通素材；被 AI 索引與引用是目標而非損失。配方劑量等機密不在官網上。
 
 User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=full
 Allow: /
 
-# 排除不需要索引的目錄(目前無)
+# 表單後端 API：不是網頁，沒有內容可索引。
+# 不擋的話 Googlebot 會一直去 GET 它，然後在 Search Console
+# 回報「因其他 4xx 問題而遭到封鎖」與「找不到網頁 (404)」。
+# 2026-08-24 實查確認，這正是目前那兩筆錯誤的來源：
+#   https://www.nutrimed.com.tw/api/contact       → 4xx
+#   https://nutrimed.com.tw/api/consultation      → 404
+Disallow: /api/
+
+# ── 明確歡迎的 AI 搜尋／引用爬蟲（宣示用，非必要但無害）──────────────
+# 這幾支決定「醫師用 AI 問 NutriMED 時，AI 讀不讀得到官網」
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+# ── 唯一保留的封鎖 ────────────────────────────────────────────────
+# Bytespider（字節跳動）：抓取量大、對台灣醫療通路無任何回流價值，
+# 且多次被回報忽視 robots.txt。留著純粹是省頻寬。
+# 若你不在意，這段可以整段刪掉。
+
+User-agent: Bytespider
+Disallow: /
+
+# ── 目前無需排除的目錄 ────────────────────────────────────────────
 # Disallow: /private/
 
-# Sitemap 位置
+# ── Sitemap ─────────────────────────────────────────────────────
 Sitemap: https://nutrimed.com.tw/sitemap.xml
